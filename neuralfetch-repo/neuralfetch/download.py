@@ -1169,7 +1169,7 @@ class Physionet(S3):
 
     Extends ``S3`` with the convention that Physionet datasets live under
     ``<study>/<version>/`` in the ``physionet-open`` bucket. After download,
-    the versioned directory is flattened into ``_dl_dir``.
+    the versioned directory is ``_dl_dir/<study>/<version>``.
     """
 
     bucket: str = "physionet-open"
@@ -1177,19 +1177,13 @@ class Physionet(S3):
 
     def _download(self, overwrite=False) -> None:
         self.prefix = f"{self.study}/{self.version}"
-        temp_folder = self._dl_dir.parent / "temp"
-        self.output_dir = temp_folder
+        self.output_dir = self._dl_dir / self.study / self.version
 
-        # Download into a temp directory first because Physionet stores
-        # objects under <study>/<version>/, which the S3 base class
-        # mirrors on disk.  After downloading we flatten by renaming
-        # temp/<study>/<version>/ directly into _dl_dir.
+        # Preserve PhysioNet source structure locally:
+        # - list only keys under <study>/<version> via `prefix`
+        # - S3 strips that prefix from each key before writing
+        # - write under download/<study>/<version>/
         super()._download()
-
-        inner = temp_folder / self.study / self.version
-        inner.rename(self._dl_dir)
-        inner.parent.rmdir()
-        temp_folder.rmdir()
 
 
 synapse_msg = """Requires creating a Synapse account with 2FA.
