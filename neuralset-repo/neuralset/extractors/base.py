@@ -7,7 +7,6 @@
 import logging
 import typing as tp
 import warnings
-from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -591,8 +590,6 @@ class HuggingFaceMixin(base.BaseModel):
     token_aggregation: tp.Literal["first", "last", "mean", "sum", "max"] | None = "mean"
     _model: torch.nn.Module | None = pydantic.PrivateAttr(default=None)
     _processor: tp.Any | None = pydantic.PrivateAttr(default=None)
-    _REPOS: tp.ClassVar[list[str]] = []
-    _skip_repo_check: bool = False  # for simpler hacking (eg: custom dinov2 checkpoints)
 
     def model_post_init(self, log__: tp.Any) -> None:
         super().model_post_init(log__)
@@ -606,34 +603,30 @@ class HuggingFaceMixin(base.BaseModel):
         if self.cache_n_layers == 1:
             msg = f"Set {name}.cache_n_layers=None instead of 1"
             raise ValueError(msg)
-        self.hf_config.model_cls(self.model_name)  # check model class exists
-        self.hf_config.processor_cls(self.model_name)  # check processor class exists
-        if not self._skip_repo_check and not self.repo_exists():
-            raise ValueError(f"The model {self.model_name} does not exist")
+        self._download_huggingface_snapshot()
 
-    def repo_exists(self) -> bool:
-        fp = Path(__file__).with_name("data") / "huggingface-repos.txt"
-        name = self.model_name
-        if not self._REPOS:  # load offline huggingface white list
-            if not fp.exists():
-                raise RuntimeError(f"Please reinstall neuralset: missing file {fp}")
-            self._REPOS.extend(fp.read_text("utf8").splitlines())
-        if name in self._REPOS:
-            return True
-        else:
-            from huggingface_hub import repo_info
+    def _download_huggingface_snapshot(self) -> None:
+        from huggingface_hub import snapshot_download
+        from huggingface_hub.errors import LocalEntryNotFoundError
 
-            try:  # if not in whitelist, check through API and save it if it exists
-                repo_info(name)
-                self._REPOS.append(name)
-                self._REPOS.sort()
-                try:
-                    fp.write_text("\n".join(self._REPOS))
-                except Exception:
-                    pass  # nevermind if there is no write permission
-                return True
-            except Exception:
-                return False
+        revisions: list[tp.Any] = []
+        for load_kwargs in (self.hf_config.model_kwargs, self.hf_config.processor_kwargs):
+            revision = None if load_kwargs is None else load_kwargs.get("revision")
+            if revision not in revisions:
+                revisions.append(revision)
+        for revision in revisions:
+            kwargs = {} if revision is None else {"revision": revision}
+            try:  # fast path once the snapshot is already cached
+                snapshot_download(
+                    repo_id=self.model_name,
+                    local_files_only=True,
+                    **kwargs,
+                )
+            except LocalEntryNotFoundError:  # first instantiation populates the cache
+                snapshot_download(
+                    repo_id=self.model_name,
+                    **kwargs,
+                )
 
     @classmethod
     def _exclude_from_cls_uid(cls) -> list[str]:
@@ -674,6 +667,7 @@ class HuggingFaceMixin(base.BaseModel):
         Model = hf_config.model_cls(self.model_name)
         if self.pretrained:
             kwargs = (hf_config.model_kwargs or {}).copy()
+            kwargs["local_files_only"] = True
             if self.device == "accelerate":
                 kwargs["device_map"] = "auto"
             if self.dtype is not None and "torch_dtype" not in kwargs:
@@ -696,8 +690,18 @@ class HuggingFaceMixin(base.BaseModel):
             if self.device != "accelerate":
                 model.to(self.device)
         else:
+            config_kwargs: dict[str, tp.Any] = {
+                "output_hidden_states": True,
+                "local_files_only": True,
+            }
+            if (
+                hf_config.model_kwargs is not None
+                and "revision" in hf_config.model_kwargs
+            ):
+                config_kwargs["revision"] = hf_config.model_kwargs["revision"]
             config = AutoConfig.from_pretrained(
-                self.model_name, output_hidden_states=True
+                self.model_name,
+                **config_kwargs,
             )
             constructor = getattr(Model, "from_config", Model._from_config)  # type: ignore[attr-defined]
             model = constructor(config, **(hf_config.model_kwargs or {}))
@@ -713,9 +717,11 @@ class HuggingFaceMixin(base.BaseModel):
 
     def load_processor(self) -> tp.Any:
         Processor = self.hf_config.processor_cls(self.model_name)
+        kwargs = (self.hf_config.processor_kwargs or {}).copy()
+        kwargs["local_files_only"] = True
         return Processor.from_pretrained(
             self.model_name,
-            **(self.hf_config.processor_kwargs or {}),
+            **kwargs,
         )
 
     def _aggregate_layers(self, latents: np.ndarray) -> np.ndarray:
