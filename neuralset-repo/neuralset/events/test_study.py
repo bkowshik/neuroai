@@ -130,6 +130,17 @@ def test_download_appends_study_name(tmp_path: Path, with_name: bool) -> None:
     assert (study.path / "data.txt").is_file()
 
 
+def test_download_after_run_does_not_crash_when_frozen(tmp_path: Path) -> None:
+    """run() freezes the model via exca; a later download() must still resolve
+    its path without raising "instance was frozen" (issue #153, run->download)."""
+    infra: tp.Any = {"cluster": None}
+    study = FakeData2025(path=tmp_path, infra_timelines=infra)
+    study.run()  # caches timelines and freezes the instance
+    study._download = lambda: (study.path / "data.txt").touch()  # type: ignore
+    study.download()  # previously raised RuntimeError: ... instance was frozen
+    assert (study.path / "data.txt").is_file()
+
+
 def test_study_export() -> None:
     study = ns.Study(name="Mne2013Sample", path=ns.CACHE_FOLDER)
     dumped = study.model_dump()

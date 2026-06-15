@@ -385,9 +385,19 @@ class Study(base.Step):
         # Ensure download goes into a subfolder named after the study
         name = self.__class__.__name__
         if self.path.name.lower() != name.lower():
-            self.path = self.path / name
-            STUDY_PATHS[self.__class__.__name__] = self.path
-            logger.info("Download path updated to %s", self.path)
+            try:
+                self.path = self.path / name
+                STUDY_PATHS[self.__class__.__name__] = self.path
+                logger.info("Download path updated to %s", self.path)
+            except RuntimeError as e:
+                # Instance frozen by a prior run(): keep the path run() already
+                # resolved and download into it. ``path`` is excluded from the
+                # cache UID (see _exclude_from_cls_uid), so identity is unaffected.
+                if "frozen" not in str(e).lower():
+                    raise
+                logger.info(
+                    "Instance frozen; downloading into existing path %s", self.path
+                )
         self.path.mkdir(parents=True, exist_ok=True)
         self._download(**kwargs)
         if not self.path.exists():
