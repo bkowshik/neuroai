@@ -8,6 +8,7 @@ import getpass
 import json
 import os
 import sys
+import tempfile
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -144,8 +145,6 @@ def setup_config(config_path: Path | None = None) -> dict[str, Any]:
 
 def _default_config() -> dict[str, Any]:
     """Return a minimal config with temporary paths for non-interactive use."""
-    import tempfile
-
     base = Path(tempfile.gettempdir()) / "neuralbench"
     username = getpass.getuser()
     config = {

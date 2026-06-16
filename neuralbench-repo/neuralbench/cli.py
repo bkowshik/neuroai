@@ -14,6 +14,7 @@ config assembly are delegated to :mod:`neuralbench.registry` and
 
 import argparse
 import logging
+import os
 import sys
 import traceback
 import typing as tp
@@ -196,8 +197,6 @@ def run_benchmark(
         return []
 
     if plot_cached:
-        import os
-
         os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
     from neuralbench.main import BenchmarkAggregator
