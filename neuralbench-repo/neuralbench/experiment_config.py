@@ -11,6 +11,8 @@ configs ready for ``BenchmarkAggregator``.
 """
 
 import logging
+import os
+import shutil
 from itertools import product
 from pathlib import Path
 from warnings import warn
@@ -264,9 +266,6 @@ def _warn_slurm_partition(
     warning surfaces the resolved config path, honoring the
     ``NEURALBENCH_CONFIG`` environment variable.
     """
-    import os
-    import shutil
-
     from neuralbench.config_manager import get_default_config_path
 
     if debug or prepare or download:

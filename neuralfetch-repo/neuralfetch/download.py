@@ -750,8 +750,6 @@ class Dryad(BaseDownload):
         return files_resp.get("_embedded", {}).get("stash:files", [])
 
     def _download(self) -> None:
-        import tempfile
-        import zipfile
         from urllib.parse import quote
 
         import requests as req
