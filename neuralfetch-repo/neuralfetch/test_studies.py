@@ -42,10 +42,12 @@ def test_physionet_study_download_root(tmp_path: Path) -> None:
         Zyma2019Electroencephalograms,
     )
 
-    study = Zyma2019Electroencephalograms(path=tmp_path / "zyma")
+    study = Zyma2019Electroencephalograms(path=tmp_path)
+    # model_post_init appends the study subfolder to the generic root, then the
+    # Physionet backend nests data under download/<study>/<version>/.
     expected_root = (
         tmp_path
-        / "zyma"
+        / "Zyma2019Electroencephalograms"
         / "download"
         / study._PHYSIONET_STUDY  # noqa: SLF001
         / study._PHYSIONET_VERSION  # noqa: SLF001
@@ -74,9 +76,9 @@ def test_study_info(name: str, tmp_path: Path) -> None:
     if not folder.exists():
         pytest.skip(f"Missing folder {folder} for study {name}")
     study = _study_mod.STUDIES[name](path=folder)
-    if study.path == folder and folder.name.lower() != name.lower():
-        # path was not updated from generic to study-specific
-        pytest.skip(f"Study data not found for {name} in {folder}")
+    if not study.path.exists():
+        # the study-specific subfolder (resolved in model_post_init) has no data
+        pytest.skip(f"Study data not found for {name} in {study.path}")
     assert study._info is not None
     try:
         actual = utils.compute_study_info(name, folder)

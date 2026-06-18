@@ -46,7 +46,7 @@ def test_download_and_read_share_single_root(
 
     # #153: writer and reader resolve to the same single root ...
     assert {called_root for called_root, _ in data_path_calls} == {root}
-    assert root == (tmp_path / "download").absolute()
+    assert root == (tmp_path / "Mne2013Sample" / "download").absolute()
     assert data_path == root / "MNE-sample-data" / "MEG" / "sample"
     # ... so only one copy of the dataset is ever created (not three)
     assert len(list(tmp_path.rglob("MNE-sample-data"))) == 1
