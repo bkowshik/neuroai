@@ -44,16 +44,20 @@ def _make_bids_tree(root, subdir="download"):
 
 @pytest.fixture
 def bids_tree(tmp_path):
-    sub, ses, _ = _make_bids_tree(tmp_path)
-    return tmp_path, sub, ses
+    # build under the study's resolved path so it matches ``bids_root``
+    study = Sivakumar2024Emg2qwerty(path=str(tmp_path))
+    sub, ses, _ = _make_bids_tree(study.path)
+    return study.path, sub, ses
 
 
 def test_emg2qwerty_study_source(tmp_path):
     """``iter_timelines`` / ``_load_timeline_events`` / ``bids_root`` work
     on a BIDS tree placed under ``download/`` (the layout
     ``Study.download`` produces)."""
-    sub, ses, bids_root = _make_bids_tree(tmp_path)
     study = Sivakumar2024Emg2qwerty(path=str(tmp_path))
+    # the study subfolder is resolved in model_post_init, so build the tree
+    # under the study's resolved path (``<tmp_path>/Sivakumar2024Emg2qwerty``).
+    sub, ses, bids_root = _make_bids_tree(study.path)
 
     assert study.bids_root == bids_root
     assert list(study.iter_timelines()) == [{"subject": sub, "session": ses}]
