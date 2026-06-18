@@ -44,9 +44,8 @@ Quick install
    pip install neuralfetch
 
 Installing NeuralFetch automatically registers all curated studies in
-NeuralSet's catalog — no extra imports needed. The public-data studies
-download through pluggable backends (OpenNeuro, OSF, S3, …) that ship
-with the ``quickstart`` extra:
+NeuralSet's catalog — no extra imports needed. Downloading their data
+needs the backends in the ``quickstart`` extra:
 
 .. code-block:: bash
 
