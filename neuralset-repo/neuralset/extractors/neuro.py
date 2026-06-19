@@ -1074,7 +1074,7 @@ class FmriCleaner(pydantic.BaseModel):
     filter: tp.Literal["butterworth", "cosine"] | None
         Filter to use: "butterworth" or "cosine".
     ensure_finite: bool
-        Whether to set nans to 0.
+        Whether to replace non-finite values (NaN, +/-Inf) with 0.
     """
 
     model_config = pydantic.ConfigDict(extra="forbid")
@@ -1089,6 +1089,7 @@ class FmriCleaner(pydantic.BaseModel):
         if (
             self.detrend
             or self.standardize
+            or self.ensure_finite
             or (self.high_pass is not None)
             or (self.low_pass is not None)
         ):

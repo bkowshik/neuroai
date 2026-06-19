@@ -1872,3 +1872,29 @@ def test_channel_positions_meg_2d_rejected() -> None:
         NotImplementedError, match="n_spatial_dims=2 is not supported for MEG"
     ):
         ns.extractors.ChannelPositions(neuro=meg, n_spatial_dims=2)
+
+
+# ---------------------------------------------------------------------------
+# FmriCleaner.ensure_finite is honored when other cleaning is disabled
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("ensure_finite", [True, False])
+def test_fmri_cleaner_ensure_finite(ensure_finite: bool) -> None:
+    """ensure_finite must apply even with detrend/standardize/filters all off."""
+    data = np.random.randn(3, 50).astype(np.float32)
+    data[0, 10] = np.nan
+    data[1, 20] = np.inf
+    data[2, 30] = -np.inf
+
+    cleaner = ns.extractors.FmriCleaner(
+        detrend=False, standardize=False, ensure_finite=ensure_finite
+    )
+    cleaned = cleaner.clean(data, t_r=1.0)
+
+    assert cleaned.shape == data.shape
+    assert cleaned.dtype == data.dtype
+    if ensure_finite:
+        assert np.isfinite(cleaned).all()
+    else:
+        assert not np.isfinite(cleaned).all()
