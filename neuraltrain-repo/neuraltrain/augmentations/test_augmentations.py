@@ -9,6 +9,8 @@ import torch
 
 from .augmentations import (
     BandstopFilterFFT,
+    FTSurrogateConfig,
+    SignFlipConfig,
     TrivialBrainAugment,
     TrivialBrainAugmentConfig,
 )
@@ -30,4 +32,28 @@ def test_trivial_brain_augment(sfreq):
     x = torch.randn(10, 2, 512)
     z = transform(x)
     # Only check shape for now
+    assert z.shape == x.shape
+
+
+@pytest.mark.parametrize("probability,expected_sign", [(0.0, 1.0), (1.0, -1.0)])
+def test_sign_flip_config(probability, expected_sign):
+    transform = SignFlipConfig(probability=probability).build()
+    x = torch.randn(10, 2, 512)
+    z = transform(x)
+    assert z.shape == x.shape
+    # probability=1 flips every example's sign; probability=0 leaves it unchanged
+    assert torch.allclose(z, expected_sign * x)
+
+
+@pytest.mark.parametrize("channel_indep", [False, True])
+@pytest.mark.parametrize("phase_noise_magnitude", [0.5, 1.0])
+def test_ft_surrogate_config(phase_noise_magnitude, channel_indep):
+    transform = FTSurrogateConfig(
+        probability=1.0,
+        phase_noise_magnitude=phase_noise_magnitude,
+        channel_indep=channel_indep,
+    ).build()
+    x = torch.randn(10, 2, 512)
+    z = transform(x)
+    # Phase randomization preserves shape; values are stochastic
     assert z.shape == x.shape

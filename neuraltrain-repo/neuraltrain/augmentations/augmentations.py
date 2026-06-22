@@ -111,6 +111,56 @@ class SmoothTimeMaskConfig(pydantic.BaseModel):
         )
 
 
+class FTSurrogateConfig(pydantic.BaseModel):
+    """Configuration for braindecode's ``FTSurrogate`` augmentation.
+
+    Parameters
+    ----------
+    probability : float
+        Probability of applying the augmentation to a given example.
+    phase_noise_magnitude : float
+        Magnitude (in ``[0, 1]``) of the uniformly-sampled phase perturbation,
+        scaling the range ``[0, phase_noise_magnitude * 2 * pi]``.
+    channel_indep : bool
+        Whether to sample phase perturbations independently per channel.  Keep
+        ``False`` when spatial information matters (e.g. BCI).
+    """
+
+    probability: float
+    phase_noise_magnitude: float = 1.0
+    channel_indep: bool = False
+    model_config = pydantic.ConfigDict(protected_namespaces=(), extra="forbid")
+
+    def build(self) -> nn.Module:
+        from braindecode.augmentation import FTSurrogate
+
+        return FTSurrogate(
+            probability=self.probability,
+            phase_noise_magnitude=self.phase_noise_magnitude,
+            channel_indep=self.channel_indep,
+        )
+
+
+class SignFlipConfig(pydantic.BaseModel):
+    """Configuration for braindecode's ``SignFlip`` augmentation.
+
+    Parameters
+    ----------
+    probability : float
+        Probability of applying the augmentation to a given example.
+    """
+
+    probability: float
+    model_config = pydantic.ConfigDict(protected_namespaces=(), extra="forbid")
+
+    def build(self) -> nn.Module:
+        from braindecode.augmentation import SignFlip
+
+        return SignFlip(
+            probability=self.probability,
+        )
+
+
 class BandstopFilterFFTConfig(pydantic.BaseModel):
     """Configuration for :class:`BandstopFilterFFT`.
 
