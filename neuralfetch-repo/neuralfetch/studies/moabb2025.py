@@ -3217,8 +3217,13 @@ class Romani2025Brainform(_BaseMoabb):
         labels = [s for s in labels if s not in self._EXCLUDE_SUBJECTS]
         return {i: s for i, s in enumerate(labels)}
 
-    def _download(self) -> None:
-        """Build timelines.csv by scanning BIDS directory (no mne_bids needed)."""
+    def _download(self, subjects: list[int] | None = None) -> None:
+        """Build timelines.csv by scanning BIDS directory (no mne_bids needed).
+
+        ``subjects`` selects a subset of subject indices (as keyed by
+        :meth:`_subject_map`); ``None`` (the default) builds timelines for
+        all subjects.
+        """
         timeline_path = Path(self.path) / "timelines.csv"
         if timeline_path.exists():
             return
@@ -3230,6 +3235,13 @@ class Romani2025Brainform(_BaseMoabb):
             )
 
         subj_map = self._subject_map()
+        if subjects is not None:
+            unknown = sorted(set(subjects) - set(subj_map))
+            if unknown:
+                raise ValueError(
+                    f"Unknown subject(s) {unknown}; available: {sorted(subj_map)}"
+                )
+            subj_map = {i: s for i, s in subj_map.items() if i in set(subjects)}
         rows: list[dict[str, tp.Any]] = []
         for idx, label in subj_map.items():
             subj_dir = bids / f"sub-{label}"
