@@ -208,3 +208,21 @@ def test_update_source_info(tmp_path: Path) -> None:
     finally:
         _study_mod.STUDIES.pop("DummyUpdateTest2099", None)
         sys.modules.pop("dummy_study", None)
+
+
+def test_brennan2019_timeline_count(tmp_path: Path) -> None:
+    """Brennan2019Hierarchical must enumerate exactly its 33 declared subjects.
+
+    ``iter_timelines`` is pure subject-set arithmetic (no disk access), so this
+    guards the count against drifting from ``_info.num_timelines`` without
+    needing the dataset.  Six in-range subjects ship no timelock-preprocessing
+    ``.mat`` file and must stay excluded.
+    """
+    from neuralfetch.studies.brennan2019hierarchical import Brennan2019Hierarchical
+
+    study = Brennan2019Hierarchical(path=tmp_path)
+    timelines = list(study.iter_timelines())
+    assert len(timelines) == study._info.num_timelines == 33  # noqa: SLF001
+    subjects = {t["subject"] for t in timelines}
+    no_proc = {"S28", "S29", "S31", "S33", "S46", "S47", "S49"}
+    assert subjects.isdisjoint(no_proc)
