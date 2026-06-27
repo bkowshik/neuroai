@@ -55,8 +55,12 @@ class Wu2020Investigation(_BaseMoabb):
         "clenching the left or right fist."
     )
     event_id: tp.ClassVar[dict[str, int]] = {"left_hand": 1, "right_hand": 2}
-    # Capture _info from a FULL (all-6-subject) download on Colab — see the
-    # capture snippet: run download()+run(), then compute_study_info(...) and
-    # paste the printed ``studies.StudyInfo(...)`` here. Until then None (the
-    # study still downloads/runs; test_study_info skips when _info is None).
-    _info: tp.ClassVar[studies.StudyInfo | None] = None
+    # Captured from a full 6-subject download (1114 trials total).
+    _info: tp.ClassVar[studies.StudyInfo] = studies.StudyInfo(
+        num_timelines=13,
+        num_subjects=6,
+        num_events_in_query=81,
+        event_types_in_query={"Eeg", "Stimulus"},
+        data_shape=(122, 981200),
+        frequency=1000.0,
+    )
