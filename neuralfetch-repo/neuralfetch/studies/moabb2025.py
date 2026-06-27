@@ -2186,7 +2186,7 @@ class Kim2025Beta(_BaseMoabb):
           url={https://doi.org/10.1038/s41597-025-06032-2}
         }
     """
-    url: tp.ClassVar[str] = "https://doi.org/10.6084/m9.figshare.28806815.v2"
+    url: tp.ClassVar[str] = "https://doi.org/10.6084/m9.figshare.28806815"
     licence: tp.ClassVar[str] = "CC-BY-4.0"
     description: tp.ClassVar[str] = (
         "EEG recordings (31-ch) in 40 healthy participants while fixating on beta-range (14-21.8 Hz) flickering targets in a 40-class SSVEP speller."
