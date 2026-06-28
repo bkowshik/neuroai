@@ -1081,6 +1081,14 @@ class Dong2023Large(_BaseMoabb):
         "15.6": 39,
         "15.8": 40,
     }
+    _info: tp.ClassVar[studies.StudyInfo] = studies.StudyInfo(
+        num_timelines=59,
+        num_subjects=59,
+        num_events_in_query=161,
+        event_types_in_query={"Eeg", "Stimulus"},
+        data_shape=(8, 216000),
+        frequency=250.0,
+    )
 
 
 class Dornhege2004Boosting(_BaseMoabb):
@@ -1446,6 +1454,14 @@ class Han2024Enhancing(_BaseMoabb):
         "32.5": 31,
         "33": 32,
     }
+    _info: tp.ClassVar[studies.StudyInfo] = studies.StudyInfo(
+        num_timelines=48,
+        num_subjects=24,
+        num_events_in_query=193,
+        event_types_in_query={"Eeg", "Stimulus"},
+        data_shape=(64, 595200),
+        frequency=1000.0,
+    )
 
 
 def _load_haufe2011_raw(dl_path: Path, subject: int) -> mne.io.RawArray:
@@ -2166,6 +2182,14 @@ class Kaya2018Large(_BaseMoabb):
         "right_hand": 2,
         "passive": 3,
     }
+    _info: tp.ClassVar[studies.StudyInfo] = studies.StudyInfo(
+        num_timelines=17,
+        num_subjects=7,
+        num_events_in_query=961,
+        event_types_in_query={"Eeg", "Stimulus"},
+        data_shape=(19, 671600),
+        frequency=200.0,
+    )
 
 
 class Kim2025Beta(_BaseMoabb):
@@ -2233,6 +2257,14 @@ class Kim2025Beta(_BaseMoabb):
         "20.8": 39,
         "21.8": 40,
     }
+    _info: tp.ClassVar[studies.StudyInfo] = studies.StudyInfo(
+        num_timelines=240,
+        num_subjects=40,
+        num_events_in_query=41,
+        event_types_in_query={"Eeg", "Stimulus"},
+        data_shape=(31, 290720),
+        frequency=1024.0,
+    )
 
 
 class Kojima2024ReplicationA(_BaseMoabb):
